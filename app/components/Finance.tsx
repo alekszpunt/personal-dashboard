@@ -20,7 +20,7 @@ const expenses = [
   { name: "Personal / misc", amount: 200 },
 ];
 
-type Balance = { name: string; type: string; balance: number; currency: string };
+type Balance = { name: string; accountName: string; type: string; current: number; available: number; currency: string };
 type Transaction = { description: string; amount: number; date: string; type: string; category: string; account: string };
 
 export default function Finance() {
@@ -73,7 +73,7 @@ export default function Finance() {
     window.location.href = "/api/truelayer/auth";
   };
 
-  const totalAvailable = balances.reduce((a, b) => a + b.balance, 0);
+  const totalAvailable = balances.reduce((a, b) => a + b.available, 0);
 
   return (
     <div className="space-y-4">
@@ -125,14 +125,17 @@ export default function Finance() {
         {bankConnected && balances.length > 0 && (
           <div className="space-y-3">
             {balances.map((b, i) => (
-              <div key={i} className="flex justify-between items-center">
+              <div key={i} className="flex justify-between items-center bg-white/5 rounded-xl px-4 py-3">
                 <div>
-                  <p className="text-white/80 text-sm">{b.name}</p>
-                  <p className="text-white/30 text-xs">{b.type}</p>
+                  <p className="text-white font-medium text-sm">{b.name}</p>
+                  <p className="text-white/30 text-xs">{b.accountName} · {b.type}</p>
                 </div>
-                <p className={`text-lg font-semibold ${b.balance < 0 ? "text-red-400" : "text-green-400"}`}>
-                  £{b.balance.toFixed(2)}
-                </p>
+                <div className="text-right">
+                  <p className={`text-lg font-semibold ${b.current < 0 ? "text-red-400" : "text-white"}`}>
+                    £{b.current.toFixed(2)}
+                  </p>
+                  <p className="text-white/30 text-xs">current</p>
+                </div>
               </div>
             ))}
           </div>
