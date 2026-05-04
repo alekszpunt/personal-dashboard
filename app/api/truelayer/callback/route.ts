@@ -32,14 +32,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to get token" }, { status: 400 });
     }
 
-    // Get provider info to use as unique key
     const meRes = await fetch("https://api.truelayer.com/data/v1/me", {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
     const meData = await meRes.json();
     const provider = meData.results?.[0]?.provider_id ?? `bank_${Date.now()}`;
 
-    // Store token in Supabase
     await supabase.from("bank_tokens").upsert({
       id: provider,
       access_token: tokens.access_token,
