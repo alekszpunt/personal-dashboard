@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -26,15 +32,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to get token" }, { status: 400 });
     }
 
-    const res = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/?connected=true`);
-    res.cookies.set("tl_access_token", tokens.access_token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 3600,
-      path: "/",
+    // Get provider info to use as unique key
+    const meRes = await fetch("https://api.truelayer.com/data/v1/me", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+    const meData = await meRes.json();
+    const provider = meData.results?.[0]?.provider_id ?? `bank_${Date.now()}`;
+
+    // Store token in Supabase
+    await supabase.from("bank_tokens").upsert({
+      id: provider,
+      access_token: tokens.access_token,
     });
 
-    return res;
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/?connected=true`);
   } catch (err) {
     console.error("TrueLayer callback error:", err);
     return NextResponse.json({ error: "Auth failed" }, { status: 500 });

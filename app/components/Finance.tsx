@@ -38,10 +38,7 @@ export default function Finance() {
   const [bankError, setBankError] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("connected") === "true") {
-      fetchBalances();
-    }
+    fetchBalances();
   }, []);
 
   const fetchBalances = async () => {
