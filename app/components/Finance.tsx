@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 
 const debts = [
   { name: "Overdraft", total: 1700 },
@@ -19,6 +20,8 @@ const expenses = [
   { name: "Personal / misc", amount: 200 },
 ];
 
+type Balance = { name: string; type: string; balance: number; currency: string };
+
 export default function Finance() {
   const income = 1920;
   const taxRate = 0.2;
@@ -27,8 +30,91 @@ export default function Finance() {
   const totalExpenses = expenses.reduce((a, b) => a + b.amount, 0);
   const leftOver = takeHome - totalExpenses;
 
+  const [balances, setBalances] = useState<Balance[]>([]);
+  const [bankConnected, setBankConnected] = useState(false);
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankError, setBankError] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") === "true") {
+      fetchBalances();
+    }
+  }, []);
+
+  const fetchBalances = async () => {
+    setBankLoading(true);
+    setBankError("");
+    try {
+      const res = await fetch("/api/truelayer/balance");
+      if (res.status === 401) {
+        setBankConnected(false);
+        return;
+      }
+      const data = await res.json();
+      if (data.balances) {
+        setBalances(data.balances);
+        setBankConnected(true);
+      }
+    } catch {
+      setBankError("Could not load balances.");
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  const connectBank = () => {
+    window.location.href = "/api/truelayer/auth";
+  };
+
   return (
     <div className="space-y-4">
+
+      {/* Live Bank Balance */}
+      <div className="glass p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white font-semibold text-sm uppercase tracking-wide">Live Bank Balance</h2>
+          {bankConnected && (
+            <button onClick={fetchBalances} className="text-xs text-white/30 hover:text-white transition-colors">Refresh</button>
+          )}
+        </div>
+
+        {!bankConnected && !bankLoading && (
+          <div className="text-center py-4">
+            <p className="text-white/40 text-sm mb-4">Connect your Nationwide account to see your live balance.</p>
+            <button
+              onClick={connectBank}
+              className="glass-pill-active text-black text-sm font-medium px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+            >
+              Connect Nationwide
+            </button>
+          </div>
+        )}
+
+        {bankLoading && (
+          <p className="text-white/30 text-sm text-center py-4">Connecting to your bank...</p>
+        )}
+
+        {bankError && (
+          <p className="text-red-400 text-sm text-center py-2">{bankError}</p>
+        )}
+
+        {bankConnected && balances.length > 0 && (
+          <div className="space-y-3">
+            {balances.map((b, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <div>
+                  <p className="text-white/80 text-sm">{b.name}</p>
+                  <p className="text-white/30 text-xs">{b.type}</p>
+                </div>
+                <p className={`text-lg font-semibold ${b.balance < 0 ? "text-red-400" : "text-green-400"}`}>
+                  £{b.balance.toFixed(2)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
