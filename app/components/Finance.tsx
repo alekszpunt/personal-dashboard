@@ -86,7 +86,10 @@ export default function Finance() {
             £{totalAvailable.toFixed(2)}
           </p>
           <p className="text-white/30 text-xs">across {balances.length} account{balances.length > 1 ? "s" : ""}</p>
-          <button onClick={fetchBalances} className="mt-3 text-xs text-white/20 hover:text-white transition-colors">↻ Refresh</button>
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <button onClick={fetchBalances} className="text-xs text-white/20 hover:text-white transition-colors">↻ Refresh</button>
+            <button onClick={connectBank} className="text-xs text-green-400/60 hover:text-green-400 transition-colors">+ Connect another account</button>
+          </div>
         </div>
       )}
 
