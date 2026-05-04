@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         return {
           name: account.display_name,
           type: account.account_type,
-          balance: balData.results?.[0]?.current ?? 0,
+          balance: balData.results?.[0]?.available ?? balData.results?.[0]?.current ?? 0,
           currency: balData.results?.[0]?.currency ?? "GBP",
         };
       })

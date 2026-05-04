@@ -21,6 +21,7 @@ const expenses = [
 ];
 
 type Balance = { name: string; type: string; balance: number; currency: string };
+type Transaction = { description: string; amount: number; date: string; type: string; category: string; account: string };
 
 export default function Finance() {
   const income = 1920;
@@ -31,6 +32,7 @@ export default function Finance() {
   const leftOver = takeHome - totalExpenses;
 
   const [balances, setBalances] = useState<Balance[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [bankConnected, setBankConnected] = useState(false);
   const [bankLoading, setBankLoading] = useState(false);
   const [bankError, setBankError] = useState("");
@@ -55,6 +57,10 @@ export default function Finance() {
       if (data.balances) {
         setBalances(data.balances);
         setBankConnected(true);
+        // fetch transactions
+        const txRes = await fetch("/api/truelayer/transactions");
+        const txData = await txRes.json();
+        if (txData.transactions) setTransactions(txData.transactions);
       }
     } catch {
       setBankError("Could not load balances.");
@@ -189,6 +195,26 @@ export default function Finance() {
           </div>
         </div>
       </div>
+
+      {/* Live Transactions */}
+      {bankConnected && transactions.length > 0 && (
+        <div className="glass p-5">
+          <h2 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">Recent Transactions</h2>
+          <div className="space-y-3">
+            {transactions.slice(0, 20).map((tx, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/80 text-sm truncate">{tx.description}</p>
+                  <p className="text-white/25 text-xs">{new Date(tx.date).toLocaleDateString("en-GB")} · {tx.category}</p>
+                </div>
+                <p className={`text-sm font-medium ml-4 shrink-0 ${tx.amount < 0 ? "text-red-400" : "text-green-400"}`}>
+                  {tx.amount < 0 ? "-" : "+"}£{Math.abs(tx.amount).toFixed(2)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );
