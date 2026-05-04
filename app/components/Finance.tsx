@@ -67,8 +67,22 @@ export default function Finance() {
     window.location.href = "/api/truelayer/auth";
   };
 
+  const totalAvailable = balances.reduce((a, b) => a + b.balance, 0);
+
   return (
     <div className="space-y-4">
+
+      {/* Hero Balance Card */}
+      {bankConnected && balances.length > 0 && (
+        <div className="glass-green p-6 text-center">
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Total Available Balance</p>
+          <p className={`text-5xl font-bold tracking-tight mb-1 ${totalAvailable < 0 ? "text-red-400" : "text-green-400"}`}>
+            £{totalAvailable.toFixed(2)}
+          </p>
+          <p className="text-white/30 text-xs">across {balances.length} account{balances.length > 1 ? "s" : ""}</p>
+          <button onClick={fetchBalances} className="mt-3 text-xs text-white/20 hover:text-white transition-colors">↻ Refresh</button>
+        </div>
+      )}
 
       {/* Live Bank Balance */}
       <div className="glass p-5">
