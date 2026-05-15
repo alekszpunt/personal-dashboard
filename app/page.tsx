@@ -5,8 +5,9 @@ import Goals from "./components/Goals";
 import Tasks from "./components/Tasks";
 import Learning from "./components/Learning";
 import Health from "./components/Health";
+import Email from "./components/Email";
 
-const tabs = ["Finance", "Goals", "Tasks", "Learning", "Health"];
+const tabs = ["Finance", "Goals", "Tasks", "Learning", "Health", "Email"];
 
 export default function Home() {
   const [active, setActive] = useState("Finance");
@@ -52,6 +53,7 @@ export default function Home() {
           {active === "Tasks" && <Tasks />}
           {active === "Learning" && <Learning />}
           {active === "Health" && <Health />}
+          {active === "Email" && <Email />}
         </div>
       </div>
     </main>
