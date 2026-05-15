@@ -1,7 +1,22 @@
 import { ImapFlow } from "imapflow";
-import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+async function callClaude(prompt: string): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  const data = await res.json() as { content: { type: string; text: string }[] };
+  return data.content?.[0]?.type === "text" ? data.content[0].text : "";
+}
 
 function makeClient() {
   return new ImapFlow({
@@ -68,13 +83,7 @@ Write a concise, professional reply in Alexandra's voice. She is direct, warm, a
 Keep it short — no waffle. Use British spelling. Do NOT include a subject line or "Dear..." opening unless it's clearly needed.
 Return only the reply body text, nothing else.`;
 
-    const aiResponse = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const draft = aiResponse.content[0].type === "text" ? aiResponse.content[0].text : "";
+    const draft = await callClaude(prompt);
 
     return Response.json({ draft });
   } catch (err) {
