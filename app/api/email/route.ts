@@ -1,5 +1,8 @@
 import { ImapFlow } from "imapflow";
 
+// Vercel: allow up to 60s for this route (requires Pro plan)
+export const maxDuration = 60;
+
 async function callClaude(prompt: string): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -64,12 +67,14 @@ export async function GET() {
         {
           uid: true,
           envelope: true,
-          bodyParts: [{ key: "1", start: 0, maxLength: 400 }],
+          bodyParts: ["TEXT"],
           internalDate: true,
         }
       )) {
         const from = msg.envelope?.from?.[0];
-        const preview = msg.bodyParts?.get("1")?.toString("utf8")?.replace(/\s+/g, " ").trim() ?? "";
+        // Get TEXT part which works for both plain text and HTML emails
+        const textPart = msg.bodyParts?.get("TEXT");
+        const preview = textPart?.toString("utf8")?.replace(/\s+/g, " ").trim() ?? "";
 
         rawEmails.push({
           uid: msg.uid,

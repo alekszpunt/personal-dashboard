@@ -1,6 +1,9 @@
 "use client";
+import { useState, useEffect } from "react";
 
-const goals = [
+type Goal = { label: string; done: boolean; target: string };
+
+const initialGoals: Goal[] = [
   { label: "Debt cleared", done: false, target: "When payout lands" },
   { label: "Own place", done: false, target: "End of 2026" },
   { label: "Motorbike or car", done: false, target: "End of 2026" },
@@ -20,6 +23,29 @@ const feelGood = [
 ];
 
 export default function Goals() {
+  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("dashboard-goals");
+    if (saved) {
+      try {
+        setGoals(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved goals", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever goals change
+  useEffect(() => {
+    localStorage.setItem("dashboard-goals", JSON.stringify(goals));
+  }, [goals]);
+
+  const toggleGoal = (label: string) => {
+    setGoals(goals.map((g) => (g.label === label ? { ...g, done: !g.done } : g)));
+  };
+
   const done = goals.filter((g) => g.done).length;
   const percent = Math.round((done / goals.length) * 100);
 
@@ -38,11 +64,14 @@ export default function Goals() {
           {goals.map((g) => (
             <div key={g.label} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                  g.done ? "bg-green-500 border-green-500" : "border-white/20"
-                }`}>
+                <button
+                  onClick={() => toggleGoal(g.label)}
+                  className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 cursor-pointer hover:border-green-400 transition-colors ${
+                    g.done ? "bg-green-500 border-green-500" : "border-white/20"
+                  }`}
+                >
                   {g.done && <span className="text-black text-[10px]">✓</span>}
-                </div>
+                </button>
                 <span className={`text-sm ${g.done ? "line-through text-white/30" : "text-white/80"}`}>{g.label}</span>
               </div>
               <span className="text-xs text-white/25 ml-4 shrink-0">{g.target}</span>

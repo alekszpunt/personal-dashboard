@@ -1,5 +1,8 @@
 import { ImapFlow } from "imapflow";
 
+// Vercel: allow up to 60s for this route (requires Pro plan)
+export const maxDuration = 60;
+
 async function callClaude(prompt: string): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

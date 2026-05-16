@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
     await supabase.from("bank_tokens").upsert({
       id: provider,
       access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
     });
 
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/?connected=true`);

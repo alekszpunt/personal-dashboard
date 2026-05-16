@@ -1,6 +1,27 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+async function refreshToken(refreshToken: string): Promise<string | null> {
+  try {
+    const response = await fetch("https://auth.truelayer.com/connect/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: process.env.TRUELAYER_CLIENT_ID!,
+        client_secret: process.env.TRUELAYER_CLIENT_SECRET!,
+        refresh_token: refreshToken,
+      }),
+    });
+
+    const tokens = await response.json();
+    return tokens.access_token || null;
+  } catch (err) {
+    console.error("Token refresh error:", err);
+    return null;
+  }
+}
+
 export async function GET() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,11 +36,28 @@ export async function GET() {
 
     const allBalances = await Promise.all(
       tokenRows.map(async (row) => {
-        const token = row.access_token;
-
-        const accountsRes = await fetch("https://api.truelayer.com/data/v1/accounts", {
+        let token = row.access_token;
+        
+        // Try initial request
+        let accountsRes = await fetch("https://api.truelayer.com/data/v1/accounts", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        
+        // If 401, try refreshing the token
+        if (accountsRes.status === 401 && row.refresh_token) {
+          const newToken = await refreshToken(row.refresh_token);
+          if (newToken) {
+            token = newToken;
+            // Update Supabase with new token
+            await supabase.from("bank_tokens").update({ access_token: newToken }).eq("id", row.id);
+            // Retry with new token
+            accountsRes = await fetch("https://api.truelayer.com/data/v1/accounts", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+          }
+        }
+
+
         const accountsData = await accountsRes.json();
         const accounts = accountsData.results || [];
 

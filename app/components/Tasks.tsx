@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 
@@ -19,6 +19,23 @@ export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>(initial);
   const [newTask, setNewTask] = useState("");
   const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("dashboard-tasks");
+    if (saved) {
+      try {
+        setTasks(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved tasks", e);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever tasks change
+  useEffect(() => {
+    localStorage.setItem("dashboard-tasks", JSON.stringify(tasks));
+  }, [tasks]);
 
   const addTask = () => {
     if (!newTask.trim()) return;
@@ -52,26 +69,45 @@ export default function Tasks() {
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <input
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTask()}
             placeholder="Add a task..."
-            className="flex-1 glass-input text-white text-sm px-4 py-2 outline-none placeholder:text-white/20 bg-transparent"
+            className="w-full glass-input text-white text-sm px-4 py-2 outline-none placeholder:text-white/20 bg-transparent"
           />
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as "high" | "medium" | "low")}
-            className="glass-input text-white/60 text-sm px-3 py-2 outline-none bg-transparent"
-          >
-            <option value="high">High</option>
-            <option value="medium">Med</option>
-            <option value="low">Low</option>
-          </select>
-          <button onClick={addTask} className="glass-pill-active text-black text-sm font-medium px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">
-            Add
-          </button>
+          <div className="flex gap-2">
+            <div className="flex gap-1 bg-white/5 rounded-xl p-1">
+              <button
+                onClick={() => setPriority("high")}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                  priority === "high" ? "bg-red-400/20 text-red-400" : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                High
+              </button>
+              <button
+                onClick={() => setPriority("medium")}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                  priority === "medium" ? "bg-yellow-400/20 text-yellow-400" : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                Med
+              </button>
+              <button
+                onClick={() => setPriority("low")}
+                className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                  priority === "low" ? "bg-white/10 text-white/60" : "text-white/40 hover:text-white/60"
+                }`}
+              >
+                Low
+              </button>
+            </div>
+            <button onClick={addTask} className="flex-1 glass-pill-active text-black text-sm font-medium px-4 py-2 rounded-xl hover:opacity-90 transition-opacity">
+              Add
+            </button>
+          </div>
         </div>
       </div>
 
