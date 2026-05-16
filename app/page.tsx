@@ -6,8 +6,9 @@ import Tasks from "./components/Tasks";
 import Learning from "./components/Learning";
 import Health from "./components/Health";
 import Email from "./components/Email";
+import Moodboard from "./components/Moodboard";
 
-const tabs = ["Finance", "Goals", "Tasks", "Learning", "Health", "Email"];
+const tabs = ["Finance", "Goals", "Tasks", "Learning", "Moodboard", "Health", "Email"];
 
 export default function Home() {
   const [active, setActive] = useState("Finance");
@@ -52,6 +53,7 @@ export default function Home() {
           {active === "Goals" && <Goals />}
           {active === "Tasks" && <Tasks />}
           {active === "Learning" && <Learning />}
+          {active === "Moodboard" && <Moodboard />}
           {active === "Health" && <Health />}
           {active === "Email" && <Email />}
         </div>
