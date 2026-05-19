@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Home from "./components/Home";
 import Finance from "./components/Finance";
 import Goals from "./components/Goals";
 import Tasks from "./components/Tasks";
@@ -8,10 +9,10 @@ import Health from "./components/Health";
 import Email from "./components/Email";
 import Moodboard from "./components/Moodboard";
 
-const tabs = ["Finance", "Goals", "Tasks", "Learning", "Moodboard", "Health", "Email"];
+const tabs = ["Home", "Finance", "Goals", "Tasks", "Learning", "Moodboard", "Health", "Email"];
 
-export default function Home() {
-  const [active, setActive] = useState("Finance");
+export default function DashboardPage() {
+  const [active, setActive] = useState("Home");
 
   return (
     <main className="min-h-screen text-white relative overflow-hidden"
@@ -49,6 +50,7 @@ export default function Home() {
         </div>
 
         <div>
+          {active === "Home" && <Home />}
           {active === "Finance" && <Finance />}
           {active === "Goals" && <Goals />}
           {active === "Tasks" && <Tasks />}
