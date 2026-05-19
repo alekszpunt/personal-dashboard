@@ -1,65 +1,131 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #080b08;
+  --foreground: #f0f0f0;
+  --accent: #22c55e;
+  --accent-dim: rgba(34, 197, 94, 0.15);
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-border-hover: rgba(255, 255, 255, 0.14);
+  --muted: rgba(255, 255, 255, 0.35);
+  --muted-dim: rgba(255, 255, 255, 0.18);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Liquid glass card */
-.glass {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* ── Cards ─────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  transition: border-color 0.2s;
+}
+.card:hover {
+  border-color: var(--card-border-hover);
 }
 
-.glass-green {
-  background: rgba(34, 197, 94, 0.12);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 20px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(34, 197, 94, 0.15);
+.card-green {
+  background: rgba(34, 197, 94, 0.07);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 16px;
 }
 
-.glass-input {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+.card-warning {
+  background: rgba(234, 179, 8, 0.07);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: 16px;
 }
 
-.glass-pill {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+/* ── Inputs ─────────────────────────────────────── */
+.field {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+.field:focus {
+  border-color: rgba(34, 197, 94, 0.4);
+  outline: none;
 }
 
-.glass-pill-active {
-  background: rgba(34, 197, 94, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(34, 197, 94, 0.6);
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+/* ── Buttons ─────────────────────────────────────── */
+.btn-primary {
+  background: #22c55e;
+  color: #000;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: opacity 0.15s, transform 0.1s;
 }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  color: var(--muted);
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-ghost:hover {
+  border-color: var(--card-border-hover);
+  color: #fff;
+}
+
+/* ── Nav pills ─────────────────────────────────────── */
+.nav-pill {
+  border-radius: 8px;
+  color: var(--muted);
+  transition: background 0.15s, color 0.15s;
+}
+.nav-pill:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+.nav-pill-active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  font-weight: 600;
+}
+
+/* ── Progress bar ─────────────────────────────────── */
+.progress-track {
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  background: #22c55e;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+.progress-fill-red {
+  background: #f87171;
+  border-radius: 999px;
+}
+
+/* ── Stat label ─────────────────────────────────── */
+.stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-dim);
+}
+
+/* ── Divider ─────────────────────────────────────── */
+.divider {
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* ── Legacy glass — keep for backwards compat ─── */
+.glass { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; }
+.glass-green { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-radius: 16px; }
+.glass-input { background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 10px; }
+.glass-pill { background: transparent; border: 1px solid var(--card-border); border-radius: 8px; }
+.glass-pill-active { background: #22c55e; color: #000; border-radius: 8px; }

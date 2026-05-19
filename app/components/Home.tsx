@@ -3,54 +3,46 @@ import { useState, useEffect } from "react";
 
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 type Goal = { label: string; done: boolean; target: string };
-type Digest = {
-  id: string;
-  title: string;
-  source: string;
-  summary: string;
-  addedAt: string;
-  read: boolean;
-};
+type Digest = { id: string; title: string; source: string; summary: string; addedAt: string; read: boolean };
+type CreditScore = { score: number; provider: string; updatedAt: string };
 
-export default function Home() {
+function getCreditBand(score: number) {
+  if (score >= 961) return { label: "Excellent", color: "text-green-400" };
+  if (score >= 881) return { label: "Good",      color: "text-green-400" };
+  if (score >= 721) return { label: "Fair",       color: "text-yellow-400" };
+  if (score >= 561) return { label: "Poor",       color: "text-orange-400" };
+  return                   { label: "Very Poor",  color: "text-red-400" };
+}
+
+interface HomeProps {
+  setActive?: (tab: string) => void;
+}
+
+export default function Home({ setActive }: HomeProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [digests, setDigests] = useState<Digest[]>([]);
+  const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
 
-  // Load data from localStorage
   useEffect(() => {
-    // Load tasks
     const savedTasks = localStorage.getItem("dashboard-tasks");
     if (savedTasks) {
       try {
-        const allTasks = JSON.parse(savedTasks) as Task[];
-        // Only show high priority, not done
-        const priorityTasks = allTasks.filter((t) => !t.done && t.priority === "high").slice(0, 3);
-        setTasks(priorityTasks);
-      } catch (e) {
-        console.error("Failed to parse tasks", e);
-      }
+        const all = JSON.parse(savedTasks) as Task[];
+        setTasks(all.filter((t) => !t.done && t.priority === "high").slice(0, 5));
+      } catch {}
     }
-
-    // Load goals
     const savedGoals = localStorage.getItem("dashboard-goals");
     if (savedGoals) {
-      try {
-        const allGoals = JSON.parse(savedGoals) as Goal[];
-        setGoals(allGoals);
-      } catch (e) {
-        console.error("Failed to parse goals", e);
-      }
+      try { setGoals(JSON.parse(savedGoals)); } catch {}
     }
-
-    // Load digests (placeholder for now)
     const savedDigests = localStorage.getItem("dashboard-digests");
     if (savedDigests) {
-      try {
-        setDigests(JSON.parse(savedDigests));
-      } catch (e) {
-        console.error("Failed to parse digests", e);
-      }
+      try { setDigests(JSON.parse(savedDigests)); } catch {}
+    }
+    const savedCredit = localStorage.getItem("dashboard-credit-score");
+    if (savedCredit) {
+      try { setCreditScore(JSON.parse(savedCredit)); } catch {}
     }
   }, []);
 
@@ -58,107 +50,187 @@ export default function Home() {
   const goalsTotal = goals.length;
   const goalsPercent = goalsTotal > 0 ? Math.round((goalsCompleted / goalsTotal) * 100) : 0;
 
-  const now = new Date();
-  const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 18 ? "Good afternoon" : "Good evening";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-4">
-      
-      {/* Welcome header */}
-      <div className="glass p-6">
-        <h2 className="text-2xl font-semibold text-white mb-1">{greeting}, Alex</h2>
-        <p className="text-white/40 text-sm">Here's what needs your attention today.</p>
+    <div className="space-y-6">
+
+      {/* Greeting */}
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
+        <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
       </div>
 
-      {/* Quick stats grid */}
-      <div className="grid grid-cols-2 gap-4">
-        
-        {/* Total Balance */}
-        <div className="glass p-5">
-          <div className="text-white/40 text-xs uppercase tracking-wide mb-1">Available Balance</div>
-          <div className="text-2xl font-semibold text-green-400">—</div>
-          <div className="text-white/30 text-xs mt-1">Connect banks to see total</div>
-        </div>
-
-        {/* Goals Progress */}
-        <div className="glass p-5">
-          <div className="text-white/40 text-xs uppercase tracking-wide mb-1">2026 Goals</div>
-          <div className="text-2xl font-semibold text-white">
-            {goalsCompleted}/{goalsTotal}
-          </div>
-          <div className="w-full bg-white/5 rounded-full h-1.5 mt-2">
-            <div className="bg-green-400 h-1.5 rounded-full transition-all" style={{ width: `${goalsPercent || 2}%` }} />
-          </div>
-        </div>
-
+      {/* Top stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <StatCard
+          label="Available Balance"
+          value="—"
+          sub="Connect banks to see"
+          onClick={() => setActive?.("Finance")}
+        />
+        <StatCard
+          label="Goals Progress"
+          value={goalsTotal > 0 ? `${goalsCompleted} / ${goalsTotal}` : "—"}
+          sub={goalsTotal > 0 ? `${goalsPercent}% complete` : "No goals yet"}
+          progress={goalsPercent}
+          onClick={() => setActive?.("Goals")}
+        />
+        <StatCard
+          label="Urgent Tasks"
+          value={tasks.length > 0 ? `${tasks.length}` : "All clear"}
+          sub={tasks.length > 0 ? "high priority" : "Nothing urgent"}
+          alert={tasks.length > 0}
+          onClick={() => setActive?.("Tasks")}
+        />
+        <StatCard
+          label="AI Digests"
+          value={digests.length > 0 ? `${digests.filter(d => !d.read).length}` : "—"}
+          sub={digests.length > 0 ? "unread updates" : "Nothing yet"}
+          onClick={() => setActive?.("Email")}
+        />
+        {(() => {
+          const band = creditScore ? getCreditBand(creditScore.score) : null;
+          return (
+            <StatCard
+              label="Credit Score"
+              value={creditScore ? `${creditScore.score}` : "—"}
+              sub={band ? `${band.label} · ${creditScore!.provider}` : "Not set yet"}
+              customValueColor={band?.color}
+              onClick={() => setActive?.("Finance")}
+            />
+          );
+        })()}
       </div>
 
-      {/* Priority Tasks */}
-      {tasks.length > 0 && (
-        <div className="glass p-5">
-          <h3 className="text-white font-semibold text-sm uppercase tracking-wide mb-3 flex items-center justify-between">
-            <span>High Priority Tasks</span>
-            <span className="text-red-400 text-xs">{tasks.length} urgent</span>
-          </h3>
-          <div className="space-y-2">
-            {tasks.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 text-sm text-white/70">
-                <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-                <span>{t.text}</span>
-              </div>
-            ))}
+      {/* Main grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Priority Tasks */}
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">Priority Tasks</h2>
+            {tasks.length > 0 && (
+              <span className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 px-2 py-0.5 rounded-full">
+                {tasks.length} urgent
+              </span>
+            )}
           </div>
-          <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); (window as any).setActiveTab?.("Tasks"); }}
-            className="text-xs text-green-400 hover:text-green-300 mt-3 inline-block"
+          {tasks.length === 0 ? (
+            <p className="text-white/25 text-sm py-4 text-center">No urgent tasks. Nice.</p>
+          ) : (
+            <div className="space-y-2">
+              {tasks.map((t) => (
+                <div key={t.id} className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                  <span className="text-white/75 text-sm">{t.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setActive?.("Tasks")}
+            className="text-xs text-green-400 hover:text-green-300 mt-4 transition-colors"
           >
             View all tasks →
-          </a>
+          </button>
         </div>
-      )}
 
-      {tasks.length === 0 && (
-        <div className="glass p-5">
-          <h3 className="text-white font-semibold text-sm uppercase tracking-wide mb-2">High Priority Tasks</h3>
-          <p className="text-white/30 text-sm">All clear! No urgent tasks right now.</p>
-        </div>
-      )}
-
-      {/* AI Digests */}
-      <div className="glass p-5">
-        <h3 className="text-white font-semibold text-sm uppercase tracking-wide mb-1">AI Digests</h3>
-        <p className="text-white/30 text-xs mb-4">Updates from creators you follow, news summaries, and insights.</p>
-        
-        {digests.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-white/30 text-sm mb-2">No digests yet.</p>
-            <p className="text-white/20 text-xs">Fred will monitor your favorite creators and post updates here.</p>
+        {/* Goals */}
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">2026 Goals</h2>
+            <span className="stat-label">{goalsPercent}%</span>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {digests.map((d) => (
-              <div key={d.id} className={`border border-white/10 rounded-lg p-3 ${d.read ? 'opacity-50' : ''}`}>
-                <div className="flex items-start justify-between mb-1">
-                  <div className="text-white/80 text-sm font-medium">{d.title}</div>
-                  {!d.read && <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0 mt-1" />}
-                </div>
-                <div className="text-white/40 text-xs mb-2">{d.source}</div>
-                <p className="text-white/60 text-sm">{d.summary}</p>
+          {goalsTotal === 0 ? (
+            <p className="text-white/25 text-sm py-4 text-center">No goals set yet.</p>
+          ) : (
+            <>
+              <div className="progress-track h-1.5 mb-4">
+                <div className="progress-fill h-1.5" style={{ width: `${goalsPercent}%` }} />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Calendar placeholder */}
-      <div className="glass p-5">
-        <h3 className="text-white font-semibold text-sm uppercase tracking-wide mb-2">Upcoming</h3>
-        <div className="text-center py-4">
-          <p className="text-white/30 text-sm">Calendar integration coming soon.</p>
+              <div className="space-y-2">
+                {goals.slice(0, 5).map((g, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                      g.done ? "bg-green-500/20 border-green-500/40" : "border-white/15"
+                    }`}>
+                      {g.done && <span className="text-green-400 text-[9px]">✓</span>}
+                    </div>
+                    <span className={`text-sm ${g.done ? "text-white/30 line-through" : "text-white/70"}`}>{g.label}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <button
+            onClick={() => setActive?.("Goals")}
+            className="text-xs text-green-400 hover:text-green-300 mt-4 transition-colors"
+          >
+            View all goals →
+          </button>
         </div>
-      </div>
 
+        {/* AI Digests */}
+        <div className="card p-5 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">AI Digests</h2>
+            <span className="stat-label">Creator updates &amp; insights</span>
+          </div>
+          {digests.length === 0 ? (
+            <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
+              <p className="text-white/25 text-sm">No digests yet.</p>
+              <p className="text-white/15 text-xs mt-1">Fred will post updates from creators you follow here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {digests.map((d) => (
+                <div key={d.id} className={`border border-white/8 rounded-xl p-4 ${d.read ? "opacity-40" : ""}`}>
+                  <div className="flex items-start justify-between mb-1.5">
+                    <span className="text-white/80 text-sm font-medium">{d.title}</span>
+                    {!d.read && <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1 shrink-0" />}
+                  </div>
+                  <p className="text-white/35 text-xs mb-2">{d.source}</p>
+                  <p className="text-white/55 text-sm">{d.summary}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Calendar placeholder */}
+        <div className="card p-5 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">Upcoming</h2>
+            <span className="stat-label">Calendar</span>
+          </div>
+          <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
+            <p className="text-white/25 text-sm">Calendar integration coming soon.</p>
+          </div>
+        </div>
+
+      </div>
     </div>
+  );
+}
+
+function StatCard({
+  label, value, sub, progress, alert, onClick, customValueColor
+}: {
+  label: string; value: string; sub: string;
+  progress?: number; alert?: boolean; onClick?: () => void; customValueColor?: string;
+}) {
+  return (
+    <button onClick={onClick} className="card p-4 text-left w-full hover:border-white/14 transition-colors">
+      <p className="stat-label mb-2">{label}</p>
+      <p className={`text-2xl font-semibold tracking-tight ${customValueColor ?? (alert ? "text-red-400" : "text-white")}`}>{value}</p>
+      {progress !== undefined && (
+        <div className="progress-track h-1 mt-2 mb-1">
+          <div className="progress-fill h-1" style={{ width: `${progress}%` }} />
+        </div>
+      )}
+      <p className="text-white/25 text-xs mt-1">{sub}</p>
+    </button>
   );
 }
