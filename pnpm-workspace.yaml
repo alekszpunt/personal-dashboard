@@ -1,8 +1,6 @@
 allowBuilds:
-  sharp: true
-  unrs-resolver: true
+  sharp: set this to true or false
+  unrs-resolver: set this to true or false
 ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
   - pino
   - thread-stream
