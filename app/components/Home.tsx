@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 type Goal = { label: string; done: boolean; target: string };
 type Digest = { id: string; title: string; source: string; summary: string; addedAt: string; read: boolean };
+type EmailItem = { uid: number; fromName: string; subject: string; date: string; priority: "urgent" | "reply" | "fyi" | "ignore"; summary: string };
+
+const priorityConfig = {
+  urgent: { label: "Urgent", color: "text-red-400",    bg: "bg-red-400/10 border-red-400/20" },
+  reply:  { label: "Reply",  color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
+  fyi:    { label: "FYI",    color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20" },
+  ignore: { label: "Skip",   color: "text-white/20",   bg: "bg-white/5 border-white/8" },
+};
 type CreditScore = { score: number; provider: string; updatedAt: string };
 
 function getCreditBand(score: number) {
@@ -23,6 +31,9 @@ export default function Home({ setActive }: HomeProps) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [digests, setDigests] = useState<Digest[]>([]);
   const [creditScore, setCreditScore] = useState<CreditScore | null>(null);
+  const [emails, setEmails] = useState<EmailItem[]>([]);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     const savedTasks = localStorage.getItem("dashboard-tasks");
@@ -44,7 +55,23 @@ export default function Home({ setActive }: HomeProps) {
     if (savedCredit) {
       try { setCreditScore(JSON.parse(savedCredit)); } catch {}
     }
+    fetchEmails();
   }, []);
+
+  const fetchEmails = async () => {
+    setEmailLoading(true);
+    setEmailError("");
+    try {
+      const res = await fetch("/api/email");
+      const data = await res.json();
+      if (data.emails) setEmails(data.emails.filter((e: EmailItem) => e.priority !== "ignore").slice(0, 6));
+      else setEmailError("Could not load emails.");
+    } catch {
+      setEmailError("Could not load emails.");
+    } finally {
+      setEmailLoading(false);
+    }
+  };
 
   const goalsCompleted = goals.filter((g) => g.done).length;
   const goalsTotal = goals.length;
@@ -195,6 +222,60 @@ export default function Home({ setActive }: HomeProps) {
                   <p className="text-white/55 text-sm">{d.summary}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Email preview */}
+        <div className="card p-5 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">Recent Emails</h2>
+            <div className="flex gap-3 items-center">
+              {!emailLoading && (
+                <button onClick={fetchEmails} className="text-xs text-white/25 hover:text-white transition-colors">↻ Refresh</button>
+              )}
+              <button onClick={() => setActive?.("Email")} className="text-xs text-green-400 hover:text-green-300 transition-colors">View all →</button>
+            </div>
+          </div>
+
+          {emailLoading && (
+            <div className="text-center py-8">
+              <p className="text-white/25 text-sm">Loading emails…</p>
+            </div>
+          )}
+
+          {emailError && !emailLoading && (
+            <div className="text-center py-6 border border-dashed border-white/8 rounded-xl">
+              <p className="text-white/25 text-sm">{emailError}</p>
+              <button onClick={fetchEmails} className="text-xs text-green-400 mt-2 hover:text-green-300">Try again</button>
+            </div>
+          )}
+
+          {!emailLoading && !emailError && emails.length === 0 && (
+            <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
+              <p className="text-white/25 text-sm">No emails to show.</p>
+            </div>
+          )}
+
+          {!emailLoading && emails.length > 0 && (
+            <div className="space-y-2">
+              {emails.map((email) => {
+                const p = priorityConfig[email.priority];
+                return (
+                  <div key={email.uid} className="flex items-start gap-3 py-2.5 border-b border-white/5 last:border-0">
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${p.bg} ${p.color}`}>
+                      {p.label}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/80 text-sm font-medium truncate">{email.subject}</p>
+                      <p className="text-white/35 text-xs truncate">{email.fromName} · {email.summary}</p>
+                    </div>
+                    <p className="text-white/20 text-xs shrink-0">
+                      {new Date(email.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
