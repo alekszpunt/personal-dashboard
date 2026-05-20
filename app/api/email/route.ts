@@ -82,7 +82,7 @@ export async function GET() {
           fromName: from?.name || from?.address || "Unknown",
           subject: msg.envelope?.subject || "(no subject)",
           date: (msg.internalDate as Date)?.toISOString() ?? "",
-          preview: preview.slice(0, 300),
+          preview: preview.slice(0, 3000),
         });
       }
     } finally {

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 type Goal = { label: string; done: boolean; target: string };
@@ -280,18 +280,179 @@ export default function Home({ setActive }: HomeProps) {
           )}
         </div>
 
-        {/* Calendar placeholder */}
-        <div className="card p-5 md:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold text-sm">Upcoming</h2>
-            <span className="stat-label">Calendar</span>
-          </div>
-          <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
-            <p className="text-white/25 text-sm">Calendar integration coming soon.</p>
-          </div>
+        {/* Calendar + Weather */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+          <CalendarWidget />
+          <WeatherWidget />
         </div>
 
       </div>
+    </div>
+  );
+}
+
+// ── Calendar Widget ─────────────────────────────────────────────────────────
+function CalendarWidget() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const monthName = today.toLocaleString("en-GB", { month: "long" }).toUpperCase();
+
+  // Days in month
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // What weekday does the 1st fall on? (0=Sun…6=Sat → convert to Mon-start: Mon=0)
+  const firstDow = new Date(year, month, 1).getDay(); // 0=Sun
+  const offset = (firstDow + 6) % 7; // Mon-start offset
+
+  const cells: (number | null)[] = [
+    ...Array(offset).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  // Pad to complete last row
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div className="card p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-red-400 font-semibold text-sm tracking-widest">{monthName}</span>
+        <span className="text-white/25 text-xs">{year}</span>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {["M","T","W","T","F","S","S"].map((d, i) => (
+          <div key={i} className="text-center text-[10px] text-white/25 font-medium py-1">{d}</div>
+        ))}
+      </div>
+
+      {/* Date grid */}
+      <div className="grid grid-cols-7">
+        {cells.map((day, i) => {
+          const isToday = day === today.getDate();
+          return (
+            <div key={i} className="flex items-center justify-center aspect-square">
+              {day ? (
+                <span className={`text-xs w-7 h-7 flex items-center justify-center rounded-full font-medium
+                  ${ isToday
+                      ? "bg-red-500 text-white font-bold"
+                      : "text-white/60 hover:text-white/90"
+                  }`}>
+                  {day}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Weather Widget ────────────────────────────────────────────────────────────
+type WeatherData = {
+  temp: number;
+  condition: string;
+  precipBars: number[]; // 0-1 values for next 12 hours
+  location: string;
+};
+
+function getConditionText(code: number, precipProb: number): string {
+  if (precipProb >= 60) return "Expect rain in the next hour";
+  if (precipProb >= 30) return "Possible light rain ahead";
+  if (code === 0) return "Clear skies right now";
+  if (code <= 3) return "Partly cloudy today";
+  if (code <= 48) return "Foggy or overcast";
+  if (code <= 67) return "Rainy conditions";
+  if (code <= 77) return "Snow possible";
+  if (code <= 82) return "Showers expected";
+  return "Stormy conditions";
+}
+
+export function WeatherWidget() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchWeather = useCallback(async () => {
+    try {
+      // Wandsworth, London
+      const lat = 51.4613, lon = -0.1878;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,weather_code` +
+        `&hourly=precipitation_probability,precipitation` +
+        `&forecast_days=1&timezone=Europe%2FLondon`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      const precipProbs: number[] = data.hourly.precipitation_probability.slice(currentHour, currentHour + 12);
+      const precipAmts: number[] = data.hourly.precipitation.slice(currentHour, currentHour + 12);
+      const maxAmt = Math.max(...precipAmts, 0.5);
+      const precipBars = precipAmts.map(v => v / maxAmt);
+
+      setWeather({
+        temp: Math.round(data.current.temperature_2m),
+        condition: getConditionText(data.current.weather_code, precipProbs[0] ?? 0),
+        precipBars,
+        location: "Wandsworth",
+      });
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchWeather(); }, [fetchWeather]);
+
+  return (
+    <div
+      className="rounded-2xl p-5 flex flex-col justify-between min-h-[200px]"
+      style={{ background: "linear-gradient(160deg, #1a6eb5 0%, #1255a0 60%, #0d4080 100%)" }}
+    >
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-white/40 text-sm">Loading weather…</p>
+        </div>
+      ) : weather ? (
+        <>
+          {/* Top row */}
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-white/70 text-xs">📍</span>
+                <span className="text-white/90 text-sm font-medium">{weather.location}</span>
+              </div>
+              <p className="text-white font-semibold text-base leading-snug max-w-[200px]">
+                {weather.condition}
+              </p>
+            </div>
+            <span className="text-white text-3xl font-light">{weather.temp}°</span>
+          </div>
+
+          {/* Precipitation bars */}
+          <div className="mt-4">
+            <div className="flex items-end gap-0.5 h-8">
+              {weather.precipBars.map((v, i) => (
+                <div
+                  key={i}
+                  className="flex-1 rounded-sm bg-white/30"
+                  style={{ height: `${Math.max(6, v * 100)}%`, opacity: 0.4 + v * 0.6 }}
+                />
+              ))}
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-white/50 text-[10px]">Now</span>
+              <span className="text-white/50 text-[10px]">+12h</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-white/40 text-sm">Weather unavailable</p>
+        </div>
+      )}
     </div>
   );
 }
