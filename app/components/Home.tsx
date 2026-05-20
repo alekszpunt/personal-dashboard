@@ -83,10 +83,16 @@ export default function Home({ setActive }: HomeProps) {
   return (
     <div className="space-y-6">
 
-      {/* Greeting */}
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
-        <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
+      {/* Greeting + mini widgets */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
+          <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
+        </div>
+        <div className="hidden md:flex gap-3 shrink-0">
+          <CalendarWidget />
+          <WeatherWidget />
+        </div>
       </div>
 
       {/* Top stats row */}
@@ -280,8 +286,8 @@ export default function Home({ setActive }: HomeProps) {
           )}
         </div>
 
-        {/* Calendar + Weather */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+        {/* Calendar + Weather — mobile only (shown above on desktop) */}
+        <div className="grid grid-cols-2 gap-4 md:col-span-2 md:hidden">
           <CalendarWidget />
           <WeatherWidget />
         </div>
@@ -312,17 +318,17 @@ function CalendarWidget() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   return (
-    <div className="card p-5">
+    <div className="card p-3" style={{ width: 160, minWidth: 160 }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-red-400 font-semibold text-sm tracking-widest">{monthName}</span>
-        <span className="text-white/25 text-xs">{year}</span>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-red-400 font-semibold text-[11px] tracking-widest">{monthName}</span>
+        <span className="text-white/25 text-[10px]">{year}</span>
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 mb-0.5">
         {["M","T","W","T","F","S","S"].map((d, i) => (
-          <div key={i} className="text-center text-[10px] text-white/25 font-medium py-1">{d}</div>
+          <div key={i} className="text-center text-[9px] text-white/25 font-medium py-0.5">{d}</div>
         ))}
       </div>
 
@@ -331,12 +337,12 @@ function CalendarWidget() {
         {cells.map((day, i) => {
           const isToday = day === today.getDate();
           return (
-            <div key={i} className="flex items-center justify-center aspect-square">
+            <div key={i} className="flex items-center justify-center" style={{ height: 18 }}>
               {day ? (
-                <span className={`text-xs w-7 h-7 flex items-center justify-center rounded-full font-medium
+                <span className={`text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-medium
                   ${ isToday
                       ? "bg-red-500 text-white font-bold"
-                      : "text-white/60 hover:text-white/90"
+                      : "text-white/55"
                   }`}>
                   {day}
                 </span>
@@ -408,49 +414,52 @@ export function WeatherWidget() {
 
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col justify-between min-h-[200px]"
-      style={{ background: "linear-gradient(160deg, #1a6eb5 0%, #1255a0 60%, #0d4080 100%)" }}
+      className="rounded-2xl p-3 flex flex-col justify-between"
+      style={{
+        width: 160, minWidth: 160, height: 160,
+        background: "linear-gradient(160deg, #1a6eb5 0%, #1255a0 60%, #0d4080 100%)"
+      }}
     >
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-white/40 text-sm">Loading weather…</p>
+          <p className="text-white/40 text-xs">Loading…</p>
         </div>
       ) : weather ? (
         <>
-          {/* Top row */}
+          {/* Location + temp */}
           <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-white/70 text-xs">📍</span>
-                <span className="text-white/90 text-sm font-medium">{weather.location}</span>
-              </div>
-              <p className="text-white font-semibold text-base leading-snug max-w-[200px]">
-                {weather.condition}
-              </p>
+            <div className="flex items-center gap-1">
+              <span className="text-white/60 text-[10px]">📍</span>
+              <span className="text-white/80 text-[11px] font-medium">{weather.location}</span>
             </div>
-            <span className="text-white text-3xl font-light">{weather.temp}°</span>
+            <span className="text-white text-xl font-light leading-none">{weather.temp}°</span>
           </div>
 
+          {/* Condition */}
+          <p className="text-white font-semibold text-[11px] leading-tight mt-1">
+            {weather.condition}
+          </p>
+
           {/* Precipitation bars */}
-          <div className="mt-4">
-            <div className="flex items-end gap-0.5 h-8">
+          <div className="mt-auto pt-2">
+            <div className="flex items-end gap-px h-6">
               {weather.precipBars.map((v, i) => (
                 <div
                   key={i}
                   className="flex-1 rounded-sm bg-white/30"
-                  style={{ height: `${Math.max(6, v * 100)}%`, opacity: 0.4 + v * 0.6 }}
+                  style={{ height: `${Math.max(8, v * 100)}%`, opacity: 0.35 + v * 0.65 }}
                 />
               ))}
             </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-white/50 text-[10px]">Now</span>
-              <span className="text-white/50 text-[10px]">+12h</span>
+            <div className="flex justify-between mt-0.5">
+              <span className="text-white/40 text-[9px]">Now</span>
+              <span className="text-white/40 text-[9px]">+12h</span>
             </div>
           </div>
         </>
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-white/40 text-sm">Weather unavailable</p>
+          <p className="text-white/40 text-xs">Unavailable</p>
         </div>
       )}
     </div>
