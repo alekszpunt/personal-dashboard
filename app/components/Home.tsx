@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 type Goal = { label: string; done: boolean; target: string };
+type CalEvent = { id: string; title: string; start: string; end: string; allDay: boolean };
 type Digest = { id: string; title: string; source: string; summary: string; addedAt: string; read: boolean };
 type EmailItem = { uid: number; fromName: string; subject: string; date: string; priority: "urgent" | "reply" | "fyi" | "ignore"; summary: string };
 
@@ -34,6 +35,8 @@ export default function Home({ setActive }: HomeProps) {
   const [emails, setEmails] = useState<EmailItem[]>([]);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [calEvents, setCalEvents] = useState<CalEvent[]>([]);
+  const [calLoading, setCalLoading] = useState(false);
 
   useEffect(() => {
     const savedTasks = localStorage.getItem("dashboard-tasks");
@@ -56,7 +59,19 @@ export default function Home({ setActive }: HomeProps) {
       try { setCreditScore(JSON.parse(savedCredit)); } catch {}
     }
     fetchEmails();
+    fetchCalendar();
   }, []);
+
+  const fetchCalendar = async () => {
+    setCalLoading(true);
+    try {
+      const res = await fetch("/api/calendar");
+      const data = await res.json();
+      if (data.events) setCalEvents(data.events);
+    } catch { /* silent */ } finally {
+      setCalLoading(false);
+    }
+  };
 
   const fetchEmails = async () => {
     setEmailLoading(true);
@@ -279,6 +294,41 @@ export default function Home({ setActive }: HomeProps) {
                     <p className="text-white/20 text-xs shrink-0">
                       {new Date(email.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                     </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Events */}
+        <div className="card p-5 md:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-white font-semibold text-sm">Upcoming</h2>
+            <button onClick={fetchCalendar} className="text-xs text-white/25 hover:text-white transition-colors">↻ Refresh</button>
+          </div>
+          {calLoading ? (
+            <p className="text-white/25 text-sm text-center py-6">Loading events…</p>
+          ) : calEvents.length === 0 ? (
+            <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
+              <p className="text-white/25 text-sm">No upcoming events in the next 30 days.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {calEvents.map((ev) => {
+                const start = new Date(ev.start);
+                const isToday = start.toDateString() === new Date().toDateString();
+                const isTomorrow = start.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+                const timeLabel = ev.allDay ? "All day" : start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+                return (
+                  <div key={ev.id} className="flex items-center gap-4 py-2.5 border-b border-white/5 last:border-0">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/80 text-sm font-medium truncate">{ev.title}</p>
+                      <p className="text-white/35 text-xs">{timeLabel}</p>
+                    </div>
+                    <span className={`text-xs shrink-0 ${ isToday ? "text-green-400" : "text-white/35" }`}>{dateLabel}</span>
                   </div>
                 );
               })}
