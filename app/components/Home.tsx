@@ -98,14 +98,50 @@ export default function Home({ setActive }: HomeProps) {
   return (
     <div className="space-y-6">
 
-      {/* Greeting + mini widgets */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
-          <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
-        </div>
-        <div className="hidden md:flex gap-3 shrink-0">
+      {/* Greeting */}
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
+        <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
+      </div>
+
+      {/* Top widgets row: Calendar + Upcoming (left) | Weather (right) */}
+      <div className="hidden md:flex items-start gap-3">
+        {/* Left cluster */}
+        <div className="flex gap-3 items-start">
           <CalendarWidget />
+          {/* Compact upcoming list */}
+          <div className="card p-3" style={{ width: 220, minWidth: 220, minHeight: 160 }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white/60 text-[11px] font-semibold tracking-wide">UPCOMING</span>
+              <button onClick={fetchCalendar} className="text-white/20 hover:text-white/50 text-[10px] transition-colors">↻</button>
+            </div>
+            {calLoading ? (
+              <p className="text-white/25 text-[11px] pt-2">Loading…</p>
+            ) : calEvents.length === 0 ? (
+              <p className="text-white/25 text-[11px] pt-2">No upcoming events.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {calEvents.slice(0, 5).map((ev) => {
+                  const start = new Date(ev.start);
+                  const isToday = start.toDateString() === new Date().toDateString();
+                  const isTomorrow = start.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                  const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                  return (
+                    <div key={ev.id} className="flex items-start gap-2">
+                      <div className="w-1 h-1 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white/75 text-[11px] font-medium truncate">{ev.title}</p>
+                        <p className={`text-[10px] ${isToday ? "text-green-400" : "text-white/30"}`}>{dateLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Weather pushed to the right */}
+        <div className="ml-auto">
           <WeatherWidget />
         </div>
       </div>
@@ -301,45 +337,34 @@ export default function Home({ setActive }: HomeProps) {
           )}
         </div>
 
-        {/* Upcoming Events */}
-        <div className="card p-5 md:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold text-sm">Upcoming</h2>
-            <button onClick={fetchCalendar} className="text-xs text-white/25 hover:text-white transition-colors">↻ Refresh</button>
+        {/* Calendar + Weather + Upcoming — mobile only */}
+        <div className="md:hidden md:col-span-2 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <CalendarWidget />
+            <WeatherWidget />
           </div>
-          {calLoading ? (
-            <p className="text-white/25 text-sm text-center py-6">Loading events…</p>
-          ) : calEvents.length === 0 ? (
-            <div className="text-center py-8 border border-dashed border-white/8 rounded-xl">
-              <p className="text-white/25 text-sm">No upcoming events in the next 30 days.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {calEvents.map((ev) => {
-                const start = new Date(ev.start);
-                const isToday = start.toDateString() === new Date().toDateString();
-                const isTomorrow = start.toDateString() === new Date(Date.now() + 86400000).toDateString();
-                const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-                const timeLabel = ev.allDay ? "All day" : start.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-                return (
-                  <div key={ev.id} className="flex items-center gap-4 py-2.5 border-b border-white/5 last:border-0">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white/80 text-sm font-medium truncate">{ev.title}</p>
-                      <p className="text-white/35 text-xs">{timeLabel}</p>
+          <div className="card p-4">
+            <p className="text-white/60 text-[11px] font-semibold tracking-wide mb-2">UPCOMING</p>
+            {calEvents.length === 0 ? (
+              <p className="text-white/25 text-xs">No upcoming events.</p>
+            ) : (
+              <div className="space-y-2">
+                {calEvents.slice(0, 5).map((ev) => {
+                  const start = new Date(ev.start);
+                  const isToday = start.toDateString() === new Date().toDateString();
+                  const isTomorrow = start.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                  const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+                  return (
+                    <div key={ev.id} className="flex items-center gap-2">
+                      <div className="w-1 h-1 rounded-full bg-green-400 shrink-0" />
+                      <p className="text-white/75 text-xs flex-1 truncate">{ev.title}</p>
+                      <p className={`text-[10px] shrink-0 ${isToday ? "text-green-400" : "text-white/30"}`}>{dateLabel}</p>
                     </div>
-                    <span className={`text-xs shrink-0 ${ isToday ? "text-green-400" : "text-white/35" }`}>{dateLabel}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Calendar + Weather — mobile only (shown above on desktop) */}
-        <div className="grid grid-cols-2 gap-4 md:col-span-2 md:hidden">
-          <CalendarWidget />
-          <WeatherWidget />
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>
