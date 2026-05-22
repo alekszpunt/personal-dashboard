@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Home from "./components/Home";
+import News from "./components/News";
 import Finance from "./components/Finance";
 import Goals from "./components/Goals";
 import Tasks from "./components/Tasks";
@@ -11,6 +12,7 @@ import Moodboard from "./components/Moodboard";
 
 const tabs = [
   { id: "Home",      icon: "⌂",  label: "Home" },
+  { id: "News",      icon: "◉",  label: "News" },
   { id: "Finance",   icon: "₤",  label: "Finance" },
   { id: "Goals",     icon: "◎",  label: "Goals" },
   { id: "Tasks",     icon: "✓",  label: "Tasks" },
@@ -62,6 +64,7 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
           <div className="w-full">
             {active === "Home"      && <Home setActive={setActive} />}
+            {active === "News"      && <News />}
             {active === "Finance"   && <Finance />}
             {active === "Goals"     && <Goals />}
             {active === "Tasks"     && <Tasks />}
