@@ -104,69 +104,77 @@ export default function Home({ setActive }: HomeProps) {
         <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
       </div>
 
-      {/* Top widgets row: Calendar + Upcoming (left) | Weather (right) */}
+      {/* Top widgets row: Weather | Calendar | Today | Priority Tasks */}
       <div className="hidden md:flex items-start gap-3">
-        {/* Left cluster */}
-        <div className="flex gap-3 items-start">
-          <CalendarWidget />
-          {/* Today: tasks + calendar events mixed */}
-          <div className="card p-3" style={{ width: 240, minWidth: 240, minHeight: 160 }}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white/60 text-[11px] font-semibold tracking-wide">TODAY</span>
-              <button onClick={fetchCalendar} className="text-white/20 hover:text-white/50 text-[10px] transition-colors">↻</button>
-            </div>
-            {calLoading ? (
-              <p className="text-white/25 text-[11px] pt-2">Loading…</p>
-            ) : (() => {
-              const todayStr = new Date().toDateString();
-              const tomorrowStr = new Date(Date.now() + 86400000).toDateString();
+        {/* Weather — leftmost */}
+        <WeatherWidget />
 
-              type TodayItem =
-                | { kind: "task"; id: number; text: string }
-                | { kind: "event"; id: string; title: string; isToday: boolean; dateLabel: string };
+        {/* Calendar */}
+        <CalendarWidget />
 
-              const items: TodayItem[] = [
-                ...tasks.map((t) => ({ kind: "task" as const, id: t.id, text: t.text })),
-                ...calEvents.slice(0, 6).map((ev) => {
-                  const start = new Date(ev.start);
-                  const isToday = start.toDateString() === todayStr;
-                  const isTomorrow = start.toDateString() === tomorrowStr;
-                  const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-                  return { kind: "event" as const, id: ev.id, title: ev.title, isToday, dateLabel };
-                }),
-              ];
-
-              if (items.length === 0) return <p className="text-white/25 text-[11px] pt-2">Nothing on today.</p>;
-
-              return (
-                <div className="space-y-1.5">
-                  {items.slice(0, 7).map((item) =>
-                    item.kind === "task" ? (
-                      <div key={`task-${item.id}`} className="flex items-start gap-2">
-                        <div className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white/75 text-[11px] font-medium truncate">{item.text}</p>
-                          <p className="text-[10px] text-red-400/70">Task</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div key={`event-${item.id}`} className="flex items-start gap-2">
-                        <div className="w-1 h-1 rounded-full bg-green-400 mt-1.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white/75 text-[11px] font-medium truncate">{item.title}</p>
-                          <p className={`text-[10px] ${item.isToday ? "text-green-400" : "text-white/30"}`}>{item.dateLabel}</p>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              );
-            })()}
+        {/* Today: upcoming calendar events */}
+        <div className="card p-3" style={{ width: 200, minWidth: 200, minHeight: 160 }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-white/60 text-[11px] font-semibold tracking-wide">TODAY</span>
+            <button onClick={fetchCalendar} className="text-white/20 hover:text-white/50 text-[10px] transition-colors">↻</button>
           </div>
+          {calLoading ? (
+            <p className="text-white/25 text-[11px] pt-2">Loading…</p>
+          ) : (() => {
+            const todayStr = new Date().toDateString();
+            const tomorrowStr = new Date(Date.now() + 86400000).toDateString();
+            const events = calEvents.slice(0, 7).map((ev) => {
+              const start = new Date(ev.start);
+              const isToday = start.toDateString() === todayStr;
+              const isTomorrow = start.toDateString() === tomorrowStr;
+              const dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : start.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+              return { ...ev, isToday, dateLabel };
+            });
+            if (events.length === 0) return <p className="text-white/25 text-[11px] pt-2">No events.</p>;
+            return (
+              <div className="space-y-1.5">
+                {events.map((ev) => (
+                  <div key={ev.id} className="flex items-start gap-2">
+                    <div className="w-1 h-1 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/75 text-[11px] font-medium truncate">{ev.title}</p>
+                      <p className={`text-[10px] ${ev.isToday ? "text-green-400" : "text-white/30"}`}>{ev.dateLabel}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
-        {/* Weather pushed to the right */}
-        <div className="ml-auto">
-          <WeatherWidget />
+
+        {/* Priority Tasks — right of Today */}
+        <div className="card p-3" style={{ width: 200, minWidth: 200, minHeight: 160 }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-white/60 text-[11px] font-semibold tracking-wide">PRIORITY</span>
+            {tasks.length > 0 && (
+              <span className="text-[9px] text-red-400 bg-red-400/10 border border-red-400/20 px-1.5 py-0.5 rounded-full">
+                {tasks.length} urgent
+              </span>
+            )}
+          </div>
+          {tasks.length === 0 ? (
+            <p className="text-white/25 text-[11px] pt-2">All clear 🎉</p>
+          ) : (
+            <div className="space-y-1.5">
+              {tasks.slice(0, 7).map((t) => (
+                <div key={t.id} className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                  <p className="text-white/75 text-[11px] font-medium truncate">{t.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setActive?.("Tasks")}
+            className="text-[10px] text-green-400 hover:text-green-300 mt-3 transition-colors block"
+          >
+            View all →
+          </button>
         </div>
       </div>
 
