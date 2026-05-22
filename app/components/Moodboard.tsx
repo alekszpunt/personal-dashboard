@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import PinterestBoards from "./PinterestBoards";
 
 type MoodboardItem = {
   id: string;
@@ -116,14 +117,8 @@ export default function Moodboard() {
         </button>
       </div>
 
-      {/* Pinterest hint */}
-      <div className="card p-3 border-purple-400/20 bg-purple-400/5 flex items-center gap-3">
-        <span className="text-lg">📌</span>
-        <div>
-          <p className="text-white/70 text-xs font-medium">Pinterest connected</p>
-          <p className="text-white/30 text-[11px]">Ask Claude Desktop to search Pinterest — pins appear here automatically.</p>
-        </div>
-      </div>
+      {/* Pinterest Boards */}
+      <PinterestBoards />
 
       {/* Add manually */}
       <div className="card p-5">
