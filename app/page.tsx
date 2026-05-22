@@ -38,7 +38,7 @@ export default function DashboardPage() {
           </div>
           <span className="text-white/60 text-sm font-medium">Alexandra's Dashboard</span>
         </div>
-        <div className="text-white/20 text-xs">
+        <div className="text-white/70 text-sm font-medium">
           {new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
         </div>
       </header>
