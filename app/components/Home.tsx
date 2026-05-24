@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import SmartGoalIntake from "./SmartGoalIntake";
 
 type Task = { id: number; text: string; done: boolean; priority: "high" | "medium" | "low" };
 type Goal = { label: string; done: boolean; target: string };
@@ -103,6 +104,9 @@ export default function Home({ setActive }: HomeProps) {
         <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}, Alexandra.</h1>
         <p className="text-white/35 mt-1 text-sm">Here's what's on today.</p>
       </div>
+
+      {/* Smart Goal Intake */}
+      <SmartGoalIntake />
 
       {/* Top widgets row: Weather | Calendar | Today | Priority Tasks */}
       <div className="hidden md:flex items-start gap-3">

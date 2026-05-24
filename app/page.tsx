@@ -5,6 +5,7 @@ import News from "./components/News";
 import Sites from "./components/Sites";
 import Finance from "./components/Finance";
 import Goals from "./components/Goals";
+import SmartGoals from "./components/SmartGoals";
 import Tasks from "./components/Tasks";
 import Learning from "./components/Learning";
 import Health from "./components/Health";
@@ -17,7 +18,7 @@ const tabs = [
   { id: "News",      icon: "◉",  label: "News" },
   { id: "Sites",     icon: "🔖", label: "Sites" },
   { id: "Finance",   icon: "₤",  label: "Finance" },
-  { id: "Goals",     icon: "◎",  label: "Goals" },
+  { id: "SmartGoals", icon: "◎",  label: "Goals" },
   { id: "Tasks",     icon: "✓",  label: "Tasks" },
   { id: "Learning",  icon: "▶",  label: "Learning" },
   { id: "Moodboard", icon: "◈",  label: "Moodboard" },
@@ -71,7 +72,7 @@ export default function DashboardPage() {
             {active === "News"      && <News />}
             {active === "Sites"     && <Sites />}
             {active === "Finance"   && <Finance />}
-            {active === "Goals"     && <Goals />}
+            {active === "SmartGoals" && <SmartGoals />}
             {active === "Tasks"     && <Tasks />}
             {active === "Learning"  && <Learning />}
             {active === "Moodboard" && <Moodboard />}
