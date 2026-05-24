@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import type { WishlistItem } from "./Wishlist";
 
 const debts = [
   { name: "Overdraft", total: 1700 },
@@ -315,6 +316,9 @@ export default function Finance() {
         </div>
       )}
 
+      {/* Wishlist Summary */}
+      <WishlistSummary />
+
     </div>
   );
 }
@@ -335,6 +339,58 @@ function Row({ label, value, valueColor = "text-white" }: { label: string; value
     <div className="flex justify-between text-sm">
       <span className="text-white/50">{label}</span>
       <span className={valueColor}>{value}</span>
+    </div>
+  );
+}
+
+function WishlistSummary() {
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("dashboard-wishlist");
+      if (raw) setWishlistItems(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  const total = wishlistItems.reduce((a, b) => a + b.price, 0);
+  const top3 = [...wishlistItems].sort((a, b) => b.price - a.price).slice(0, 3);
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-sm">Wishlist 🛍️</h2>
+        <span className="stat-label">{wishlistItems.length} item{wishlistItems.length !== 1 ? "s" : ""}</span>
+      </div>
+
+      {wishlistItems.length === 0 ? (
+        <p className="text-white/25 text-sm text-center py-4">No wishlist items yet.</p>
+      ) : (
+        <>
+          {/* Total card */}
+          <div className="card-green p-4 mb-4">
+            <p className="stat-label mb-1">Wishlist Total</p>
+            <p className="text-green-400 text-3xl font-bold tracking-tight">
+              £{total.toFixed(2)}
+            </p>
+            <p className="text-white/25 text-xs mt-1">across {wishlistItems.length} saved item{wishlistItems.length !== 1 ? "s" : ""}</p>
+          </div>
+
+          {/* Top 3 by price */}
+          <div className="space-y-2">
+            {top3.map((item) => (
+              <div key={item.id} className="flex justify-between items-center text-sm">
+                <span className="text-white/60 truncate flex-1 mr-3">{item.title}</span>
+                <span className="text-white font-medium shrink-0">£{item.price.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-white/20 text-xs mt-3">
+            View full wishlist → {wishlistItems.length} item{wishlistItems.length !== 1 ? "s" : ""} saved
+          </p>
+        </>
+      )}
     </div>
   );
 }

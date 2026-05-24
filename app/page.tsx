@@ -10,6 +10,7 @@ import Learning from "./components/Learning";
 import Health from "./components/Health";
 import Email from "./components/Email";
 import Moodboard from "./components/Moodboard";
+import Wishlist from "./components/Wishlist";
 
 const tabs = [
   { id: "Home",      icon: "⌂",  label: "Home" },
@@ -22,6 +23,7 @@ const tabs = [
   { id: "Moodboard", icon: "◈",  label: "Moodboard" },
   { id: "Health",    icon: "♡",  label: "Health" },
   { id: "Email",     icon: "✉",  label: "Email" },
+  { id: "Wishlist",  icon: "🛍", label: "Wishlist" },
 ];
 
 export default function DashboardPage() {
@@ -75,6 +77,7 @@ export default function DashboardPage() {
             {active === "Moodboard" && <Moodboard />}
             {active === "Health"    && <Health />}
             {active === "Email"     && <Email />}
+            {active === "Wishlist"  && <Wishlist />}
           </div>
         </main>
       </div>
