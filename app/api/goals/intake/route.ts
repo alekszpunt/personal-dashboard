@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Input is required" }, { status: 400 });
     }
 
-    const prompt = `You are a personal goal coach. The user has described something they want to achieve. 
+    const prompt = `You are a personal goal coach. The user has described something they want to achieve or do.
 Analyse it and return a JSON object (and ONLY valid JSON, no markdown, no extra text).
 
 User input: "${input}"
@@ -35,9 +35,9 @@ Return this exact structure:
   "category": "learning" | "finance" | "health" | "goals" | "tasks",
   "title": "short title (max 8 words)",
   "summary": "one sentence description of what they want to achieve",
+  "simple": true | false,
   "plan": [
-    { "step": "concrete action step description", "timeframe": "e.g. Week 1, Month 1, Day 1", "done": false },
-    ... (4-6 realistic steps total)
+    { "step": "concrete action step description", "timeframe": "e.g. Week 1, Month 1, Day 1", "done": false }
   ],
   "financeGoal": {
     "monthlyAmount": 200,
@@ -48,16 +48,23 @@ Return this exact structure:
   "tags": ["tag1", "tag2"]
 }
 
-Rules:
-- category must be one of: learning, finance, health, goals, tasks
-- Use "finance" if the goal involves saving money, budgeting, debt, investments, or financial targets
-- Use "learning" if the goal involves acquiring a skill, completing a course, or education
-- Use "health" if the goal involves fitness, diet, mental health, medical, or wellbeing
-- Use "tasks" if it's a one-off thing to do or a short project
-- Use "goals" for longer-term life aspirations that don't fit other categories
+Category rules — BE STRICT, pick the most specific match:
+- "finance": saving money, budgeting, debt, investments, financial targets, spending less, earning more
+- "learning": acquiring a skill, completing a course, reading, education, practising something, studying
+- "health": fitness, exercise, diet, nutrition, mental health, medical, wellbeing, sleep, drinking less
+- "tasks": a one-off errand or short action — ordering something, booking something, sending something, calling someone, buying something, any quick to-do
+- "goals": longer-term life aspirations, personal growth, relationships, travel, career changes — only use this if NONE of the above fit
+- NEVER default to "goals" when another category clearly fits
+
+Simple task rules:
+- Set "simple": true if the input is a quick one-off task or errand (e.g. "order vape pen", "book dentist", "call mum", "buy milk")
+- Set "simple": false for anything that genuinely needs planning over time
+- If simple is true, plan should have exactly 1 step with timeframe "Today"
+- If simple is false, plan should have 4-6 realistic steps
+
+Other rules:
 - financeGoal should ONLY be populated if category is "finance". Otherwise set it to null.
 - For financeGoal, estimate reasonable monthly amounts from the user's description. Use null for fields you cannot determine.
-- plan steps should be concrete, actionable, and realistic
 - tags should be 2-4 short lowercase keywords
 - Return ONLY the JSON object, nothing else`;
 

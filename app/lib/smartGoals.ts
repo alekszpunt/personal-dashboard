@@ -4,6 +4,7 @@ export type SmartGoal = {
   title: string;
   summary: string;
   category: "learning" | "finance" | "health" | "goals" | "tasks";
+  simple?: boolean;
   plan: { step: string; timeframe: string; done: boolean }[];
   financeGoal?: {
     monthlyAmount: number;

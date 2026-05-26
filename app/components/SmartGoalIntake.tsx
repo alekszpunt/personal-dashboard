@@ -106,20 +106,24 @@ export default function SmartGoalIntake() {
             </span>
           </div>
           <p className="text-white/50 text-xs mb-3">{result.summary}</p>
-          <div className="space-y-1.5">
-            {result.plan.slice(0, 2).map((step, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-green-400 text-[10px] mt-0.5 shrink-0">›</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-white/70 text-xs">{step.step}</span>
-                  <span className="text-white/25 text-[10px] ml-2">{step.timeframe}</span>
+          {result.simple ? (
+            <p className="text-green-400/60 text-xs">✓ Added as a quick task</p>
+          ) : (
+            <div className="space-y-1.5">
+              {result.plan.slice(0, 2).map((step, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-green-400 text-[10px] mt-0.5 shrink-0">›</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white/70 text-xs">{step.step}</span>
+                    <span className="text-white/25 text-[10px] ml-2">{step.timeframe}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-            {result.plan.length > 2 && (
-              <p className="text-white/25 text-[10px] pl-4">+{result.plan.length - 2} more steps — view in Goals</p>
-            )}
-          </div>
+              ))}
+              {result.plan.length > 2 && (
+                <p className="text-white/25 text-[10px] pl-4">+{result.plan.length - 2} more steps — view in Goals</p>
+              )}
+            </div>
+          )}
           {result.tags.length > 0 && (
             <div className="flex gap-1.5 mt-3 flex-wrap">
               {result.tags.map((tag) => (

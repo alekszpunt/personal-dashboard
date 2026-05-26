@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { loadGoals, saveGoals, type SmartGoal } from "../lib/smartGoals";
+import Tasks from "./Tasks";
 
 const categoryIcons: Record<string, string> = {
   learning: "▶",
@@ -186,9 +187,20 @@ export default function SmartGoals() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-white">Goals</h1>
-        <p className="text-white/35 mt-1 text-sm">Your AI-generated plans, tracked here.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">Goals &amp; Tasks</h1>
+        <p className="text-white/35 mt-1 text-sm">Your tasks and AI-generated plans, all in one place.</p>
       </div>
+
+      {/* Quick tasks section */}
+      <Tasks />
+
+      {/* Smart goals section */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-blue-400 text-base">◎</span>
+          <h2 className="text-white/80 font-semibold text-sm">Smart Goals</h2>
+          <span className="text-white/25 text-xs ml-1">AI-planned</span>
+        </div>
 
       {!hasAny ? (
         <div className="card p-10 text-center">
@@ -227,6 +239,7 @@ export default function SmartGoals() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
